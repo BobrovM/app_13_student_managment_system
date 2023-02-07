@@ -6,6 +6,15 @@ import sys
 import sqlite3
 
 
+class DatabaseConnection:
+    def __init__(self, database="database.db"):
+        self.database = database
+
+    def connect(self):
+        connection = sqlite3.connect(self.database)
+        return connection
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -61,7 +70,7 @@ class MainWindow(QMainWindow):
         self.statusbar.addWidget(delete_button)
 
     def load_data(self):
-        connection = sqlite3.connect("database.db")
+        connection = database.connect()
         data = connection.execute("SELECT * FROM students")
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(data):
@@ -136,7 +145,7 @@ class EditDialog(QDialog):
         self.setLayout(layout)
 
     def update_student(self):
-        connection = sqlite3.connect("database.db")
+        connection = database.connect()
         cursor = connection.cursor()
         cursor.execute("UPDATE students SET name = ?, course = ?, mobile = ? WHERE id = ?",
                        (self.student_name_edit.text(),
@@ -177,7 +186,7 @@ class DeleteDialog(QDialog):
         index = main_window.table.currentRow()
         student_id = main_window.table.item(index, 0).text()
 
-        connection = sqlite3.connect("database.db")
+        connection = database.connect()
         cursor = connection.cursor()
         cursor.execute("DELETE from students WHERE id = ?", (student_id,))
         connection.commit()
@@ -224,7 +233,7 @@ class InsertStudentDialog(QDialog):
         name = self.student_name_edit.text()
         course = self.course_combo.itemText(self.course_combo.currentIndex())
         mobile = self.mobile_edit.text()
-        connection = sqlite3.connect("database.db")
+        connection = database.connect()
         cursor = connection.cursor()
         cursor.execute("INSERT INTO students (name, course, mobile) VALUES (?, ?, ?)",
                        (name, course, mobile))
@@ -266,6 +275,7 @@ class SearchStudentDialog(QDialog):
             main_window.table.item(item.row(), 1).setSelected(True)
 
 
+database = DatabaseConnection()
 app = QApplication(sys.argv)
 main_window = MainWindow()
 main_window.show()
